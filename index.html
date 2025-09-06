@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en" :class="{ 'dark': theme === 'dark' }" x-data="erpApp()" x-cloak>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart College ERP - Prototype (Restored)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .sidebar-icon {
+            transition: all 0.2s ease-in-out;
+        }
+        .sidebar-icon:hover {
+            transform: scale(1.1);
+        }
+        .form-step { display: none; }
+        .form-step.active { display: block; }
+        .progress-bar-step { transition: all 0.3s ease; }
+        [x-cloak] { display: none !important; }
+
+        /* Fade-in Animation */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in { animation: fadeIn 0.5s ease-out forwards; }
+        .fade-in-delay-1 { animation: fadeIn 0.5s 0.1s ease-out forwards; opacity: 0; }
+        .fade-in-delay-2 { animation: fadeIn 0.5s 0.2s ease-out forwards; opacity: 0; }
+        .fade-in-delay-3 { animation: fadeIn 0.5s 0.3s ease-out forwards; opacity: 0; }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+        }
+    </script>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200">
+
+    <!-- Login Page -->
+    <div x-show="!isAuthenticated" x-transition.opacity class="min-h-screen flex items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
+        <div class="w-full max-w-md">
+            <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-xl text-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-indigo-600 dark:text-indigo-500 mb-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4a1 1 0 001 1h1a1 1 0 000-2H5a1 1 0 00-1 1zm12 0a1 1 0 00-1-1h-1a1 1 0 100 2h1a1 1 0 001-1zM4.707 7.293a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zm11.293 0a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707zM10 8a2 2 0 100-4 2 2 0 000 4zm0 2a4 4 0 100-8 4 4 0 000 8zM3 10a1 1 0 100 2h1.222a.75.75 0 01.53.22l2.25 2.25a.75.75 0 001.06 0l2.25-2.25a.75.75 0 01.53-.22H17a1 1 0 100-2H3z" clip-rule="evenodd" /></svg>
+                <h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-2">Smart ERP Login</h2>
+                <p class="text-gray-500 dark:text-gray-400 mb-6">Please enter your credentials to continue.</p>
+                <form @submit.prevent="login" class="space-y-4">
+                    <div>
+                        <input x-model="studentId" type="text" placeholder="Student ID" class="w-full text-center p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <div>
+                        <input x-model="password" type="password" placeholder="Password" class="w-full text-center p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                    <p x-show="loginError" x-text="loginError" class="text-red-500 text-sm"></p>
+                    <button type="submit" class="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition">Login</button>
+                </form>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-4">Demo: Palak / palak@123</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div x-show="isAuthenticated" x-transition.opacity class="flex h-screen w-full">
+        <!-- Sidebar -->
+        <aside class="w-20 bg-white dark:bg-gray-800 shadow-xl flex flex-col items-center py-6 space-y-6">
+            <div class="text-indigo-600 dark:text-indigo-500 font-bold text-2xl">
+                 <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4a1 1 0 001 1h1a1 1 0 000-2H5a1 1 0 00-1 1zm12 0a1 1 0 00-1-1h-1a1 1 0 100 2h1a1 1 0 001-1zM4.707 7.293a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zm11.293 0a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707zM10 8a2 2 0 100-4 2 2 0 000 4zm0 2a4 4 0 100-8 4 4 0 000 8zM3 10a1 1 0 100 2h1.222a.75.75 0 01.53.22l2.25 2.25a.75.75 0 001.06 0l2.25-2.25a.75.75 0 01.53-.22H17a1 1 0 100-2H3z" clip-rule="evenodd" /></svg>
+            </div>
+            <nav class="flex flex-col items-center space-y-2 flex-grow">
+                <!-- Sidebar Icons with Tooltips -->
+                <div class="group relative">
+                    <a @click.prevent="activeView = 'dashboard'" href="#" class="sidebar-icon p-3 rounded-xl" :class="{'bg-indigo-100 text-indigo-600 dark:bg-indigo-600 dark:text-white': activeView === 'dashboard', 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700': activeView !== 'dashboard'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /></svg>
+                    </a>
+                    <span class="absolute left-20 p-2 px-3 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Dashboard</span>
+                </div>
+                <div class="group relative">
+                    <a @click.prevent="activeView = 'admission'" href="#" class="sidebar-icon p-3 rounded-xl" :class="{'bg-indigo-100 text-indigo-600 dark:bg-indigo-600 dark:text-white': activeView === 'admission', 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700': activeView !== 'admission'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                    </a>
+                    <span class="absolute left-20 p-2 px-3 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Admissions</span>
+                </div>
+                 <div class="group relative">
+                    <a @click.prevent="activeView = 'library'" href="#" class="sidebar-icon p-3 rounded-xl" :class="{'bg-indigo-100 text-indigo-600 dark:bg-indigo-600 dark:text-white': activeView === 'library', 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700': activeView !== 'library'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 16c1.255 0 2.443-.29 3.5-.804V4.804zM14.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 0114.5 16c1.255 0 2.443-.29 3.5-.804v-10A7.968 7.968 0 0014.5 4z" /></svg>
+                    </a>
+                    <span class="absolute left-20 p-2 px-3 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Library</span>
+                </div>
+                <div class="group relative">
+                    <a @click.prevent="activeView = 'student'" href="#" class="sidebar-icon p-3 rounded-xl" :class="{'bg-indigo-100 text-indigo-600 dark:bg-indigo-600 dark:text-white': activeView === 'student', 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700': activeView !== 'student'}">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+                    </a>
+                    <span class="absolute left-20 p-2 px-3 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Student Utilities</span>
+                </div>
+                <div class="group relative">
+                    <a @click.prevent="activeView = 'hostel'" href="#" class="sidebar-icon p-3 rounded-xl" :class="{'bg-indigo-100 text-indigo-600 dark:bg-indigo-600 dark:text-white': activeView === 'hostel', 'text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700': activeView !== 'hostel'}">
+                         <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                    </a>
+                    <span class="absolute left-20 p-2 px-3 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Hostel</span>
+                </div>
+            </nav>
+            <div class="mt-auto flex flex-col items-center space-y-4">
+                 <div class="group relative">
+                    <a @click.prevent="logout" href="#" class="sidebar-icon p-3 rounded-xl text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                    </a>
+                    <span class="absolute left-20 p-2 px-3 text-sm text-white bg-gray-900 rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">Logout</span>
+                </div>
+                 <img src="https://placehold.co/40x40/E2E8F0/4A5568?text=A" class="dark:hidden rounded-full" alt="Admin Light">
+                 <img src="https://placehold.co/40x40/374151/E5E7EB?text=A" class="hidden dark:block rounded-full" alt="Admin Dark">
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6 sm:p-8 overflow-y-auto">
+            <!-- Header -->
+            <header class="flex justify-between items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Hello, Admin</h1>
+                    <p class="text-gray-500 dark:text-gray-400">Welcome back to your dashboard.</p>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <input type="text" placeholder="Search..." class="w-64 p-2 pl-10 bg-gray-200 dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <svg class="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </div>
+                    <button @click="toggleTheme" class="p-2 bg-gray-200 dark:bg-gray-800 rounded-full hover:bg-gray-300 dark:hover:bg-gray-700">
+                        <svg x-show="theme === 'light'" class="w-6 h-6 text-gray-700" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        <svg x-show="theme === 'dark'" class="w-6 h-6 text-yellow-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    </button>
+                </div>
+            </header>
+            
+            <!-- ====== Views Container ====== -->
+            <div class="fade-in">
+                <!-- Dashboard -->
+                <div x-show="activeView === 'dashboard'" x-transition>
+                    <!-- Stat Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-transform transform hover:scale-105 fade-in">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Admissions Today</p><p class="text-3xl font-bold text-gray-800 dark:text-white">42</p></div>
+                                <div class="bg-indigo-100 dark:bg-indigo-500/20 p-3 rounded-full"><svg class="h-6 w-6 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197M15 21a6 6 0 00-9-5.197" /></svg></div>
+                            </div>
+                            <p class="text-xs text-green-500 dark:text-green-400 mt-2 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>+12% vs yesterday</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-transform transform hover:scale-105 fade-in-delay-1">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Fee Collection</p><p class="text-3xl font-bold text-gray-800 dark:text-white">₹8.5L</p></div>
+                                <div class="bg-green-100 dark:bg-green-500/20 p-3 rounded-full"><svg class="h-6 w-6 text-green-500 dark:text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg></div>
+                            </div>
+                             <p class="text-xs text-green-500 dark:text-green-400 mt-2 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path></svg>+8% this week</p>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-transform transform hover:scale-105 fade-in-delay-2">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Hostel Occupancy</p><p class="text-3xl font-bold text-gray-800 dark:text-white">89%</p></div>
+                                <div class="bg-yellow-100 dark:bg-yellow-500/20 p-3 rounded-full"><svg class="h-6 w-6 text-yellow-500 dark:text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg></div>
+                            </div>
+                             <p class="text-xs text-yellow-500 dark:text-yellow-400 mt-2 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>Stable</p>
+                        </div>
+                         <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg transition-transform transform hover:scale-105 fade-in-delay-3">
+                            <div class="flex items-center justify-between">
+                                <div><p class="text-sm font-medium text-gray-500 dark:text-gray-400">Books Issued</p><p class="text-3xl font-bold text-gray-800 dark:text-white">217</p></div>
+                                <div class="bg-blue-100 dark:bg-blue-500/20 p-3 rounded-full"><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-blue-500 dark:text-blue-400" viewBox="0 0 20 20" fill="currentColor"><path d="M9 4.804A7.968 7.968 0 005.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 015.5 16c1.255 0 2.443-.29 3.5-.804V4.804zM14.5 4c-1.255 0-2.443.29-3.5.804v10A7.969 7.969 0 0114.5 16c1.255 0 2.443-.29 3.5-.804v-10A7.968 7.968 0 0014.5 4z" /></svg></div>
+                            </div>
+                            <p class="text-xs text-red-500 dark:text-red-400 mt-2 flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path></svg>-3% vs yesterday</p>
+                        </div>
+                    </div>
+                    <div class="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <div class="lg:col-span-2 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg fade-in"><h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">Admissions Trend</h3><canvas id="admissionsChart"></canvas></div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg fade-in-delay-1"><h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">🔮 AI Recommendations</h3>
+                            <div class="space-y-4">
+                                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg"><p class="font-semibold text-indigo-700 dark:text-indigo-300">Branch Prediction</p><p class="text-sm text-indigo-600 dark:text-indigo-400">AI/ML branch admissions are trending 15% higher than last year. Consider increasing intake.</p></div>
+                                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg"><p class="font-semibold text-yellow-700 dark:text-yellow-300">Fee Defaulter Alert</p><p class="text-sm text-yellow-600 dark:text-yellow-400">12 students show a high probability of missing the next fee deadline based on past behavior.</p></div>
+                                <div class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg"><p class="font-semibold text-green-700 dark:text-green-300">Hostel Capacity</p><p class="text-sm text-green-600 dark:text-green-400">Predictive analysis suggests hostel will reach 100% capacity in the next 7 days.</p></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- Admission Form -->
+                <div x-show="activeView === 'admission'" x-transition>
+                    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg max-w-4xl mx-auto">
+                        <!-- Progress Bar -->
+                        <div class="mb-8">
+                            <div class="flex justify-between mb-2">
+                                <span class="text-sm font-medium" :class="currentStep >= 1 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'">Personal</span>
+                                <span class="text-sm font-medium" :class="currentStep >= 2 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'">Academics</span>
+                                <span class="text-sm font-medium" :class="currentStep >= 3 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'">Interests</span>
+                                <span class="text-sm font-medium" :class="currentStep === 4 ? 'text-indigo-600 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500'">Suggestion</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                                <div class="bg-indigo-600 h-2.5 rounded-full progress-bar-step" :style="width: ${((currentStep - 1) / 3) * 100}%"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Form Steps -->
+                        <form @submit.prevent="submitForm">
+                            <div x-show="!isAnalyzing">
+                                <!-- Step 1: Personal Details -->
+                                <div x-show="currentStep === 1" class="form-step active">
+                                    <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-300">Personal Details</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Full Name</label><input type="text" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 focus:ring-2 focus:ring-indigo-500" placeholder="John Doe"></div>
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Email Address</label><input type="email" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" placeholder="john.doe@example.com"></div>
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Phone Number</label><input type="tel" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" placeholder="+91 98765 43210"></div>
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Date of Birth</label><input type="date" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"></div>
+                                    </div>
+                                </div>
+                                <!-- Step 2: Academic Details -->
+                                <div x-show="currentStep === 2" class="form-step">
+                                    <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-300">Academic Details</h2>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Previous School/College</label><input type="text" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"></div>
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Stream (e.g., Science, Commerce)</label><input type="text" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"></div>
+                                        <div><label class="block text-gray-600 dark:text-gray-400 mb-1">Percentage/CGPA</label><input type="text" class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"></div>
+                                    </div>
+                                </div>
+                                <!-- Step 3: Interest Form -->
+                                <div x-show="currentStep === 3" class="form-step">
+                                    <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-gray-300">Tell Us Your Interests</h2>
+                                    <div class="space-y-6">
+                                    <div><p class="font-medium text-gray-700 dark:text-gray-300 mb-2">Do you enjoy coding or programming?</p><div class="flex space-x-4"><label class="flex items-center"><input type="radio" name="coding" class="mr-2 bg-gray-200 dark:bg-gray-700 border-gray-400 dark:border-gray-600"> Yes</label><label class="flex items-center"><input type="radio" name="coding" class="mr-2 bg-gray-200 dark:bg-gray-700 border-gray-400 dark:border-gray-600"> No</label><label class="flex items-center"><input type="radio" name="coding" class="mr-2 bg-gray-200 dark:bg-gray-700 border-gray-400 dark:border-gray-600"> A little</label></div></div>
+                                    <div><p class="font-medium text-gray-700 dark:text-gray-300 mb-2">Rate your interest in building and designing things.</p><div class="flex items-center space-x-2 text-4xl text-gray-400 dark:text-gray-600"><template x-for="i in 5"><span @click="interestRating = i" :class="{'text-yellow-400': i <= interestRating}" class="cursor-pointer">&#9733;</span></template></div></div>
+                                    <div><p class="font-medium text-gray-700 dark:text-gray-300 mb-2">Which of these subjects excite you the most?</p><select class="w-full p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg"><option>Logical Problem Solving</option><option>Biology & Chemistry</option><option>Business & Finance</option><option>Creative Arts</option></select></div>
+                                    </div>
+                                </div>
+                                <!-- Step 4: AI Suggestion -->
+                                <div x-show="currentStep === 4" class="form-step">
+                                    <div class="text-center p-6 bg-gray-50 dark:bg-gray-900 rounded-2xl">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto text-indigo-500 dark:text-indigo-400 mb-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 2a1 1 0 00-1 1v1a1 1 0 002 0V3a1 1 0 00-1-1zM4 4a1 1 0 001 1h1a1 1 0 000-2H5a1 1 0 00-1 1zm12 0a1 1 0 00-1-1h-1a1 1 0 100 2h1a1 1 0 001-1zM4.707 7.293a1 1 0 00-1.414 1.414l.707.707a1 1 0 001.414-1.414l-.707-.707zm11.293 0a1 1 0 011.414 1.414l-.707.707a1 1 0 01-1.414-1.414l.707-.707zM10 8a2 2 0 100-4 2 2 0 000 4zm0 2a4 4 0 100-8 4 4 0 000 8zM3 10a1 1 0 100 2h1.222a.75.75 0 01.53.22l2.25 2.25a.75.75 0 001.06 0l2.25-2.25a.75.75 0 01.53-.22H17a1 1 0 100-2H3z" clip-rule="evenodd" /></svg>
+                                        <h2 class="text-2xl font-semibold mb-3 text-gray-800 dark:text-white">AI Branch Recommendation</h2>
+                                        <p class="text-gray-600 dark:text-gray-400 mb-4">Based on your interests, we suggest:</p>
+                                        <div class="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-inner inline-block">
+                                            <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">Artificial Intelligence & Data Science</p>
+                                        </div>
+                                        <p class="mt-4 text-gray-600 dark:text-gray-400 max-w-md mx-auto">This branch opens career opportunities in Software Development, Data Analytics, and Robotics Research.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- AI Analyzing Spinner -->
+                            <div x-show="isAnalyzing" class="text-center py-16">
+                                <div role="status" class="inline-block"><svg aria-hidden="true" class="w-12 h-12 text-gray-400 dark:text-gray-600 animate-spin fill-indigo-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor"/><path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill"/></svg><span class="sr-only">Loading...</span></div>
+                                <p class="text-indigo-500 dark:text-indigo-400 mt-4">Analyzing your interests...</p>
+                            </div>
+                            <!-- Navigation Buttons -->
+                            <div class="mt-8 flex justify-between" x-show="!isAnalyzing">
+                                <button type="button" @click="prevStep" x-show="currentStep > 1 && currentStep < 4" class="px-6 py-3 bg-gray-600 text-white rounded-lg font-semibold hover:bg-gray-500">Back</button>
+                                <div x-show="currentStep === 1 || currentStep === 2" class="ml-auto"><button type="button" @click="nextStep" class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">Next</button></div>
+                                <div x-show="currentStep === 3" class="ml-auto"><button type="button" @click="showSuggestion" class="px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">Analyze & Get Suggestion</button></div>
+                                <div x-show="currentStep === 4" class="ml-auto"><button type="submit" class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">Complete Admission</button></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <!-- Library -->
+                <div x-show="activeView === 'library'" x-transition>
+                    <div class="bg-white dark:bg-gray-800 p-8 rounded-2xl shadow-lg">
+                        <h2 class="text-2xl font-semibold mb-6 text-gray-800 dark:text-white">Library Portal</h2>
+                        <div class="flex items-center space-x-2 mb-6"><input type="text" placeholder="Search by title, author, or category..." class="flex-grow p-3 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg placeholder-gray-500 focus:ring-2 focus:ring-indigo-500"><button class="p-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">Search</button></div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="lg:col-span-2">
+                                <h3 class="font-semibold text-lg mb-4 text-gray-700 dark:text-gray-300">My Borrowed Books</h3>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex justify-between items-center"><div><p class="font-semibold">The Algorithm Design Manual</p><p class="text-sm text-gray-500 dark:text-gray-400">Due Date: 25 Sep 2025</p></div><button class="px-4 py-2 text-sm bg-indigo-500 text-white rounded-lg hover:bg-indigo-600">Renew</button></div>
+                                    <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg flex justify-between items-center"><div><p class="font-semibold">Data Structures in C++</p><p class="text-sm text-red-500 dark:text-red-400">Overdue by 2 days</p></div><button class="px-4 py-2 text-sm bg-gray-500 text-white rounded-lg cursor-not-allowed">Renew</button></div>
+                                </div>
+                                <h3 class="font-semibold text-lg mt-6 mb-4 text-gray-700 dark:text-gray-300">AI Recommendations For You</h3>
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><p class="font-semibold">Introduction to AI</p><span class="text-xs px-2 py-1 bg-green-200 text-green-800 dark:bg-green-500/20 dark:text-green-300 rounded-full">Available</span></div>
+                                    <div class="p-4 bg-gray-100 dark:bg-gray-700 rounded-lg"><p class="font-semibold">Machine Learning Yearning</p><span class="text-xs px-2 py-1 bg-yellow-200 text-yellow-800 dark:bg-yellow-500/20 dark:text-yellow-300 rounded-full">On Loan</span></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold text-lg mb-4 text-gray-700 dark:text-gray-300">Quick Actions</h3>
+                                <div class="space-y-4">
+                                    <div class="p-4 bg-indigo-50 dark:bg-indigo-500/10 rounded-lg"><h4 class="font-semibold text-indigo-800 dark:text-indigo-300">Digital Resources</h4><p class="text-sm text-indigo-600 dark:text-indigo-400">Access e-books & journals</p></div>
+                                    <div class="p-4 bg-green-50 dark:bg-green-500/10 rounded-lg"><h4 class="font-semibold text-green-800 dark:text-green-300">Study Room Booking</h4><p class="text-sm text-green-600 dark:text-green-400">Reserve a space for your group</p></div>
+                                    <div class="p-4 bg-yellow-50 dark:bg-yellow-500/10 rounded-lg"><h4 class="font-semibold text-yellow-800 dark:text-yellow-300">Library Events</h4><p class="text-sm text-yellow-600 dark:text-yellow-400">Check upcoming workshops</p></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                 <!-- Student Utilities View -->
+                <div x-show="activeView === 'student'" x-transition>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">Face Recognition Attendance</h3>
+                            <div class="aspect-w-16 aspect-h-9 bg-black rounded-lg mb-4 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg></div>
+                            <button class="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">Mark Attendance</button>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">Campus Navigation</h3>
+                            <div class="aspect-w-16 aspect-h-9 bg-gray-200 dark:bg-gray-700 rounded-lg mb-4 flex items-center justify-center">
+                                <img src="https://placehold.co/600x400/E5E7EB/4B5563?text=Map" class="object-cover w-full h-full rounded-lg dark:hidden" alt="Map Placeholder Light">
+                                <img src="https://placehold.co/600x400/1F2937/9CA3AF?text=Map" class="object-cover w-full h-full rounded-lg hidden dark:block" alt="Map Placeholder Dark">
+                            </div>
+                            <button class="w-full py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">Find Route to College</button>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg flex flex-col">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">Class Locator</h3>
+                            <div class="flex-grow bg-gray-100 dark:bg-gray-700 p-6 rounded-lg text-center flex flex-col justify-center">
+                                <p class="text-gray-500 dark:text-gray-400">Your Next Class:</p><p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mt-1">Advanced Algorithms</p><p class="text-lg text-gray-800 dark:text-white mt-2">Room: <span class="font-semibold">B-304</span></p><p class="text-sm text-gray-500 mt-1">at 11:00 AM</p>
+                            </div>
+                            <button class="w-full mt-4 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">View on Map</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Hostel View -->
+                <div x-show="activeView === 'hostel'" x-transition>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">Room Occupancy</h3>
+                            <div class="overflow-x-auto"><table class="w-full text-left"><thead><tr class="border-b border-gray-200 dark:border-gray-700"><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Room No.</th><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Capacity</th><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Occupants</th><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Status</th></tr></thead>
+                                <tbody>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-3">A-101</td><td>3</td><td>3</td><td><span class="px-2 py-1 text-xs font-semibold text-red-800 dark:text-red-400 bg-red-100 dark:bg-red-500/20 rounded-full">Full</span></td></tr>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-3">A-102</td><td>3</td><td>2</td><td><span class="px-2 py-1 text-xs font-semibold text-green-800 dark:text-green-400 bg-green-100 dark:bg-green-500/20 rounded-full">Available</span></td></tr>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-3">B-201</td><td>2</td><td>2</td><td><span class="px-2 py-1 text-xs font-semibold text-red-800 dark:text-red-400 bg-red-100 dark:bg-red-500/20 rounded-full">Full</span></td></tr>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-3">B-202</td><td>2</td><td>1</td><td><span class="px-2 py-1 text-xs font-semibold text-green-800 dark:text-green-400 bg-green-100 dark:bg-green-500/20 rounded-full">Available</span></td></tr>
+                                    <tr class="border-b-0 border-gray-200 dark:border-gray-700"><td class="py-3">C-305</td><td>3</td><td>1</td><td><span class="px-2 py-1 text-xs font-semibold text-green-800 dark:text-green-400 bg-green-100 dark:bg-green-500/20 rounded-full">Available</span></td></tr>
+                                </tbody>
+                            </table></div>
+                        </div>
+                        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg">
+                            <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-4">Hostel Entry/Exit Log (Live)</h3>
+                            <div class="overflow-y-auto h-64"><table class="w-full text-left"><thead><tr class="border-b border-gray-200 dark:border-gray-700"><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Student</th><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Time</th><th class="py-2 text-gray-500 dark:text-gray-400 font-medium">Status</th></tr></thead>
+                                <tbody class="text-sm">
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-2.5">Riya Sharma</td><td>08:15 PM</td><td><span class="text-green-500 dark:text-green-400">▲ Entered</span></td></tr>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-2.5">Amit Patel</td><td>08:05 PM</td><td><span class="text-red-500 dark:text-red-400">▼ Exited</span></td></tr>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-2.5">Sneha Gupta</td><td>07:50 PM</td><td><span class="text-green-500 dark:text-green-400">▲ Entered</span></td></tr>
+                                    <tr class="border-b border-gray-200 dark:border-gray-700"><td class="py-2.5">Vikram Singh</td><td>07:48 PM</td><td><span class="text-green-500 dark:text-green-400">▲ Entered</span></td></tr>
+                                    <tr class="border-b-0 border-gray-200 dark:border-gray-700"><td class="py-2.5">Priya Das</td><td>07:30 PM</td><td><span class="text-red-500 dark:text-red-400">▼ Exited</span></td></tr>
+                                </tbody>
+                            </table></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- AI Chatbot -->
+    <div x-show="isAuthenticated" class="fixed bottom-6 right-6 z-50">
+        <div x-show="isChatOpen" x-transition class="bg-white dark:bg-gray-800 w-80 h-96 rounded-2xl shadow-xl flex flex-col">
+            <div class="p-4 bg-indigo-600 text-white rounded-t-2xl"><h3 class="font-semibold">AI Assistant</h3></div>
+            <div class="flex-1 p-4 space-y-4 overflow-y-auto" id="chatbox">
+                <template x-for="message in chatMessages">
+                    <div class="flex" :class="message.sender === 'user' ? 'justify-end' : 'justify-start'">
+                        <div class="px-3 py-2 rounded-lg max-w-xs" :class="message.sender === 'user' ? 'bg-indigo-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200'">
+                            <p class="text-sm" x-text="message.text"></p>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex items-center space-x-2">
+                    <input type="text" x-model="chatInput" @keydown.enter="sendChatMessage" placeholder="Ask me anything..." class="flex-grow p-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-indigo-500">
+                    <button @click="sendChatMessage" class="p-3 bg-indigo-600 text-white rounded-full hover:bg-indigo-700">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-8.707l-3-3a1 1 0 00-1.414 1.414L10.586 9H7a1 1 0 100 2h3.586l-1.293 1.293a1 1 0 101.414 1.414l3-3a1 1 0 000-1.414z" clip-rule="evenodd" /></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <button @click="isChatOpen = !isChatOpen" class="p-4 bg-indigo-600 text-white rounded-full shadow-lg hover:bg-indigo-700 transition transform hover:scale-110">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-5.5-2.5a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM10 12a5.99 5.99 0 00-4.793 2.39A6.483 6.483 0 0010 16.5a6.483 6.483 0 004.793-2.11A5.99 5.99 0 0010 12z" clip-rule="evenodd" /></svg>
+        </button>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <script>
+        function erpApp() {
+            return {
+                isAuthenticated: false,
+                studentId: '',
+                password: '',
+                loginError: '',
+                activeView: 'dashboard',
+                currentStep: 1,
+                interestRating: 0,
+                isAnalyzing: false,
+                theme: localStorage.getItem('theme') || 'dark',
+                isChatOpen: false,
+                chatInput: '',
+                chatMessages: [{ sender: 'ai', text: 'Hello! How can I help you today?' }],
+
+                login() {
+                    if (this.studentId === 'Palak' && this.password === 'palak@123') {
+                        this.isAuthenticated = true;
+                        this.loginError = '';
+                        this.studentId = '';
+                        this.password = '';
+                         // Initialize chart only after successful login and view is rendered
+                        this.$nextTick(() => {
+                           this.initChart();
+                        });
+                    } else {
+                        this.loginError = 'Invalid Student ID or Password.';
+                    }
+                },
+                logout() {
+                    this.isAuthenticated = false,
+                    this.activeView = 'dashboard'; // Reset to default view on logout
+                },
+                toggleTheme() {
+                    this.theme = this.theme === 'dark' ? 'light' : 'dark';
+                    localStorage.setItem('theme', this.theme);
+                    this.updateChartTheme();
+                },
+                nextStep() { if (this.currentStep < 3) this.currentStep++; },
+                prevStep() { if (this.currentStep > 1) this.currentStep--; },
+                showSuggestion(){
+                    this.isAnalyzing = true;
+                    setTimeout(() => { this.currentStep = 4; this.isAnalyzing = false; }, 1500);
+                },
+                submitForm() {
+                    // In a real app, this would submit data. Here we just show a confirmation.
+                    alert('Admission form submitted successfully!');
+                    this.activeView = 'dashboard';
+                    // Reset form state
+                    this.currentStep = 1; this.interestRating = 0;
+                },
+                sendChatMessage() {
+                    if (this.chatInput.trim() === '') return;
+                    this.chatMessages.push({ sender: 'user', text: this.chatInput });
+                    this.getAiResponse(this.chatInput);
+                    this.chatInput = '';
+                    this.$nextTick(() => { document.getElementById('chatbox').scrollTop = document.getElementById('chatbox').scrollHeight; });
+                },
+                getAiResponse(query) {
+                    setTimeout(() => {
+                        let response = "I'm not sure how to answer that. Try asking about 'fees', 'admission', or 'library books'.";
+                        if (query.toLowerCase().includes('admission')) { response = "Your admission status is 'Provisionally Accepted'. Please check your email for further details."; }
+                        else if (query.toLowerCase().includes('fee')) { response = "Your pending fee for this semester is ₹25,000. The due date is 30th September 2025."; }
+                        else if (query.toLowerCase().includes('library') || query.toLowerCase().includes('book')) { response = "You have 2 books issued: 'The Algorithm Design Manual' (Due: 25 Sep) and 'Data Structures in C++' (Overdue)."; }
+                        this.chatMessages.push({ sender: 'ai', text: response });
+                        this.$nextTick(() => { document.getElementById('chatbox').scrollTop = document.getElementById('chatbox').scrollHeight; });
+                    }, 1000);
+                },
+                updateChartTheme() {
+                     const chart = Chart.getChart('admissionsChart');
+                     if (chart) {
+                        if(this.theme === 'dark') {
+                             chart.options.scales.y.grid.color = 'rgba(255, 255, 255, 0.1)';
+                             chart.options.scales.x.grid.color = 'rgba(255, 255, 255, 0.1)';
+                             chart.options.scales.y.ticks.color = '#d1d5db';
+                             chart.options.scales.x.ticks.color = '#d1d5db';
+                             chart.options.plugins.legend.labels.color = '#d1d5db';
+                        } else {
+                            chart.options.scales.y.grid.color = 'rgba(0, 0, 0, 0.1)';
+                             chart.options.scales.x.grid.color = 'rgba(0, 0, 0, 0.1)';
+                             chart.options.scales.y.ticks.color = '#6b7280';
+                             chart.options.scales.x.ticks.color = '#6b7280';
+                             chart.options.plugins.legend.labels.color = '#6b7280';
+                        }
+                        chart.update();
+                     }
+                },
+                initChart() {
+                    // Ensure chart canvas exists before trying to create a chart
+                    const chartCanvas = document.getElementById('admissionsChart');
+                    if (!chartCanvas || Chart.getChart(chartCanvas)) return; // Don't re-initialize
+                    const ctx = chartCanvas.getContext('2d');
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                            datasets: [{
+                                label: 'Admissions this year',
+                                data: [65, 59, 80, 81, 56, 55, 90],
+                                fill: true,
+                                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                                borderColor: 'rgba(99, 102, 241, 1)',
+                                tension: 0.3
+                            }]
+                        },
+                        options: { responsive: true, scales: { y: { beginAtZero: true }, x: {} }, plugins: { legend: { labels: {} } } }
+                    });
+                    this.updateChartTheme();
+                },
+                init() {
+                    // The chart will now be initialized upon successful login.
+                }
+            }
+        }
+    </script>
+</body>
+</html>
